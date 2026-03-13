@@ -127,6 +127,24 @@ function WalletModal({ onClose }: { onClose: () => void }) {
   )
 }
 
+function GasBanner({ sttBal, onDismiss }: { sttBal: bigint; onDismiss: () => void }) {
+  if (sttBal >= BigInt('10000000000000000')) return null // hide if >= 0.01 STT
+  return (
+    <div style={{ background: '#F59E0B12', border: '1px solid #F59E0B35', borderRadius: 10, padding: '10px 16px', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 16 }}>⛽</span>
+        <span style={{ fontSize: 12, color: T.yellow, fontFamily: T.mono }}>
+          Low STT balance — you need STT for gas.&nbsp;
+          <a href="https://testnet.somnia.network/" target="_blank" rel="noreferrer" style={{ color: T.accent, fontWeight: 700, textDecoration: 'none' }}>
+            Get STT from faucet ↗
+          </a>
+        </span>
+      </div>
+      <button onClick={onDismiss} style={{ background: 'none', border: 'none', color: T.muted, fontSize: 16, cursor: 'pointer', lineHeight: 1, flexShrink: 0 }}>×</button>
+    </div>
+  )
+}
+
 function Field({ label, value, onChange, placeholder, type = 'text', hint }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; hint?: string }) {
   return (
     <div style={{ marginBottom: 14 }}>
@@ -347,6 +365,7 @@ export default function App() {
   const [showCreate, setShowCreate] = useState(false)
   const [showWallet, setShowWallet] = useState(false)
   const [deliverEscrow, setDeliverEscrow] = useState<Escrow | null>(null)
+  const [gasBannerDismissed, setGasBannerDismissed] = useState(false)
 
   const fetchAll = useCallback(async (showLoader = false) => {
     if (showLoader) setLoading(true)
@@ -371,6 +390,9 @@ export default function App() {
     const t = setInterval(() => { fetchAll(); fetchRSTT() }, 15000)
     return () => clearInterval(t)
   }, [fetchAll, fetchRSTT, deliverEscrow])
+
+  // reset banner when wallet changes
+  useEffect(() => { setGasBannerDismissed(false) }, [address])
 
   useEffect(() => {
     if (!isConnected) return
@@ -418,6 +440,7 @@ export default function App() {
     : escrows
 
   const totalLocked = escrows.reduce((a, e) => [1, 2].includes(e.state) ? a + e.amount : a, 0n)
+  const sttBalRaw = sttBal?.value ?? 0n
 
   return (
     <div style={{ minHeight: '100vh', background: T.bg, color: T.text, fontFamily: T.sans }}>
@@ -465,6 +488,11 @@ export default function App() {
       </header>
 
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px' }}>
+
+        {isConnected && !gasBannerDismissed && (
+          <GasBanner sttBal={sttBalRaw} onDismiss={() => setGasBannerDismissed(true)} />
+        )}
+
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 14px', borderRadius: 99, marginBottom: 14, background: T.accentDim, border: `1px solid ${T.accentMid}`, fontSize: 11, color: T.accent, fontFamily: T.mono, fontWeight: 700 }}>⚡ POWERED BY SOMNIA REACTIVITY</div>
           <h1 className="hero-title">Freelance escrow that<br /><span style={{ color: T.accent }}>executes itself.</span></h1>
