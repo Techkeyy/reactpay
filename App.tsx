@@ -166,11 +166,11 @@ function CreateModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
         const accounts: string[] = await eth.request({ method: 'eth_requestAccounts' })
         setStatus('Step 1/2: Approving RSTT...')
         const approveData = encodeFunctionData({ abi: MOCK_STT_ABI, functionName: 'approve', args: [REACT_PAY_ADDRESS, amt] })
-        const appTx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: MOCK_STT_ADDRESS, data: approveData, gas: '0x493E0', gasPrice: '0x77359400' }] })
+        const appTx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: MOCK_STT_ADDRESS, data: approveData, gas: '0x7A120', gasPrice: '0x77359400' }] })
         await publicClient.waitForTransactionReceipt({ hash: appTx as `0x${string}`, timeout: 120_000 })
         setStatus('Step 2/2: Creating escrow...')
         const createData = encodeFunctionData({ abi: REACT_PAY_ABI, functionName: 'createEscrow', args: [freelancer as `0x${string}`, amt, title, BigInt(300)] })
-        const tx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: REACT_PAY_ADDRESS, data: createData, gas: '0x493E0', gasPrice: '0x77359400' }] })
+        const tx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: REACT_PAY_ADDRESS, data: createData, gas: '0x7A120', gasPrice: '0x77359400' }] })
         await publicClient.waitForTransactionReceipt({ hash: tx as `0x${string}`, timeout: 120_000 })
       }
       setStatus('Done! Reactivity is now watching...')
@@ -221,7 +221,7 @@ function DeliverModal({ escrow, onClose, onDone }: { escrow: Escrow; onClose: ()
         const { encodeFunctionData } = await import('viem')
         const data = encodeFunctionData({ abi: REACT_PAY_ABI, functionName: 'deliverWork', args: [escrow.id, hash] })
         const accounts: string[] = await eth.request({ method: 'eth_requestAccounts' })
-        const txHash = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: REACT_PAY_ADDRESS, data, gas: '0x493E0', gasPrice: '0x77359400' }] })
+        const txHash = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: REACT_PAY_ADDRESS, data, gas: '0x7A120', gasPrice: '0x77359400' }] })
         await publicClient.waitForTransactionReceipt({ hash: txHash as `0x${string}`, timeout: 120_000 })
       }
       setStatus('Delivered! Reactivity will auto-release payment ⚡')
@@ -405,7 +405,7 @@ export default function App() {
         const { encodeFunctionData } = await import('viem')
         const accounts: string[] = await eth.request({ method: 'eth_requestAccounts' })
         const data = encodeFunctionData({ abi: MOCK_STT_ABI, functionName: 'faucet', args: [parseUnits('1000', 18)] })
-        const tx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: MOCK_STT_ADDRESS, data, gas: '0x186A0', gasPrice: '0x77359400' }] })
+        const tx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: MOCK_STT_ADDRESS, data, gas: '0x7A120', gasPrice: '0x77359400' }] })
         await publicClient.waitForTransactionReceipt({ hash: tx as `0x${string}`, timeout: 120_000 })
       }
       fetchRSTT()
@@ -429,8 +429,8 @@ export default function App() {
         .stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 28px; }
         .hero-title { font-size: 42px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 14px; }
         .header-connected { display: flex; gap: 8px; align-items: center; }
-        .bal-rstt { display: flex; padding: 6px 10px; border-radius: 8px; background: #141C28; border: 1px solid #1E2D3D; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #4A6680; }
-        .bal-stt { display: flex; padding: 6px 10px; border-radius: 8px; background: #141C28; border: 1px solid #1E2D3D; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #4A6680; }
+        .bal-rstt { padding: 6px 10px; border-radius: 8px; background: #141C28; border: 1px solid #1E2D3D; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #4A6680; white-space: nowrap; }
+        .bal-stt { padding: 6px 10px; border-radius: 8px; background: #141C28; border: 1px solid #1E2D3D; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #4A6680; white-space: nowrap; }
         @media (max-width: 600px) {
           .modal-overlay { align-items: flex-end !important; }
           .modal-inner { border-radius: 20px 20px 0 0 !important; }
