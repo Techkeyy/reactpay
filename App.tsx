@@ -88,7 +88,7 @@ function CreateModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
         const appTx = await wc.writeContract({ address: MOCK_STT_ADDRESS, abi: MOCK_STT_ABI, functionName: 'approve', args: [REACT_PAY_ADDRESS, amt] })
         await publicClient.waitForTransactionReceipt({ hash: appTx })
         setStatus('Step 2/2: Creating escrow...')
-        const tx = await wc.writeContract({ address: REACT_PAY_ADDRESS, abi: REACT_PAY_ABI, functionName: 'createEscrow', args: [freelancer as `0x${string}`, amt, title, 300n] })
+        const tx = await wc.writeContract({ address: REACT_PAY_ADDRESS, abi: REACT_PAY_ABI, functionName: 'createEscrow', args: [freelancer as `0x${string}`, amt, title,BigInt(300)] })
         await publicClient.waitForTransactionReceipt({ hash: tx })
       } else {
         const eth = (window as any).ethereum
@@ -100,7 +100,7 @@ function CreateModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
         const appTx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: MOCK_STT_ADDRESS, data: approveData, gas: '0x493E0', gasPrice: '0x77359400' }] })
         await publicClient.waitForTransactionReceipt({ hash: appTx as `0x${string}`, timeout: 120_000 })
         setStatus('Step 2/2: Creating escrow...')
-        const createData = encodeFunctionData({ abi: REACT_PAY_ABI, functionName: 'createEscrow', args: [freelancer as `0x${string}`, amt, title, 300n] })
+        const createData = encodeFunctionData({ abi: REACT_PAY_ABI, functionName: 'createEscrow', args: [freelancer as `0x${string}`, amt, title, BigInt(300)] })
         const tx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: REACT_PAY_ADDRESS, data: createData, gas: '0x493E0', gasPrice: '0x77359400' }] })
         await publicClient.waitForTransactionReceipt({ hash: tx as `0x${string}`, timeout: 120_000 })
       }
