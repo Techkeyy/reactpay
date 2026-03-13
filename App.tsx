@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAccount, useConnect, useDisconnect, useBalance, useWalletClient } from 'wagmi'
-import { injected, walletConnect, coinbaseWallet } from 'wagmi/connectors'
+import { injected, walletConnect } from 'wagmi/connectors'
 import { formatEther, parseUnits, keccak256, toBytes, createPublicClient, http } from 'viem'
 import { MOCK_STT_ADDRESS, REACT_PAY_ADDRESS, MOCK_STT_ABI, REACT_PAY_ABI, getStateName, STATE_COLOR } from '@/lib/contracts'
 import { somniaTestnet } from '@/lib/chain'
@@ -66,9 +66,9 @@ function WalletModal({ onClose }: { onClose: () => void }) {
   const [err, setErr] = useState('')
 
   const wallets = [
-    { id: 'injected', label: 'MetaMask / Rabby / Zerion', desc: 'Browser extension wallet', icon: '🦊', connector: injected() },
+    { id: 'metamask', label: 'MetaMask', desc: 'Browser extension wallet', icon: '🦊', connector: injected() },
+    { id: 'zerion', label: 'Zerion', desc: 'Browser extension wallet', icon: '🔷', connector: injected() },
     { id: 'walletconnect', label: 'WalletConnect', desc: 'Mobile & all WC wallets', icon: '🔗', connector: walletConnect({ projectId: WC_PROJECT_ID }) },
-    { id: 'coinbase', label: 'Coinbase Wallet', desc: 'Coinbase browser or app', icon: '🔵', connector: coinbaseWallet({ appName: 'ReactPay' }) },
   ]
 
   async function handleConnect(wallet: typeof wallets[0]) {
