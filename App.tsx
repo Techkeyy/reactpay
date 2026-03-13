@@ -52,8 +52,8 @@ function Btn({ onClick, disabled, style, children }: { onClick?: () => void; dis
 
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} className="modal-overlay">
-      <div onClick={e => e.stopPropagation()} style={{ background: '#0F1520', border: '1px solid #1E2D3D', borderRadius: '20px 20px 0 0', padding: 28, width: '100%', maxWidth: 500 }} className="modal-inner">
+    <div onClick={onClose} className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div onClick={e => e.stopPropagation()} className="modal-inner" style={{ background: '#0F1520', border: '1px solid #1E2D3D', borderRadius: 20, padding: 28, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}>
         {children}
       </div>
     </div>
@@ -92,7 +92,6 @@ function WalletModal({ onClose }: { onClose: () => void }) {
         </div>
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: T.muted, fontSize: 22, cursor: 'pointer' }}>×</button>
       </div>
-
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {wallets.map(wallet => (
           <button
@@ -108,7 +107,7 @@ function WalletModal({ onClose }: { onClose: () => void }) {
               transition: 'all 0.15s',
             }}
           >
-            <div style={{ fontSize: 28, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, background: T.surface, border: `1px solid ${T.border}`, flexShrink: 0 }}>
+            <div style={{ fontSize: 26, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, background: T.surface, border: `1px solid ${T.border}`, flexShrink: 0 }}>
               {connecting === wallet.id ? '⏳' : wallet.icon}
             </div>
             <div>
@@ -119,9 +118,7 @@ function WalletModal({ onClose }: { onClose: () => void }) {
           </button>
         ))}
       </div>
-
       {err && <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 8, background: T.red + '15', border: `1px solid ${T.red}40`, fontSize: 12, color: T.red, fontFamily: T.mono }}>Error: {err}</div>}
-
       <div style={{ marginTop: 16, fontSize: 10, color: T.muted, textAlign: 'center', fontFamily: T.mono, lineHeight: 1.6 }}>
         By connecting you agree to use this dApp on Somnia Testnet.<br />
         Make sure your wallet is set to Somnia Testnet (Chain ID: 50312).
@@ -194,7 +191,7 @@ function CreateModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
       {err && <div style={{ padding: '10px 14px', borderRadius: 8, background: T.red + '15', border: `1px solid ${T.red}40`, fontSize: 12, color: T.red, fontFamily: T.mono, marginBottom: 12 }}>Error: {err}</div>}
       <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
         <button onClick={onClose} style={{ padding: '9px 20px', borderRadius: 99, background: 'transparent', color: T.muted, border: `1px solid ${T.border}`, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-        <Btn onClick={create} disabled={!valid || busy} style={{ padding: '9px 20px', borderRadius: 99, background: T.accent, color: '#0A0E14', border: 'none', fontWeight: 800, fontSize: 13, cursor: busy ? 'not-allowed' : 'pointer', opacity: (!valid || busy) ? 0.5 : 1, flex: 1 }}>
+        <Btn onClick={create} disabled={!valid || busy} style={{ flex: 1, padding: '9px 20px', borderRadius: 99, background: T.accent, color: '#0A0E14', border: 'none', fontWeight: 800, fontSize: 13, cursor: busy ? 'not-allowed' : 'pointer', opacity: (!valid || busy) ? 0.5 : 1 }}>
           {busy ? 'Working...' : '⚡ Create Escrow'}
         </Btn>
       </div>
@@ -249,7 +246,7 @@ function DeliverModal({ escrow, onClose, onDone }: { escrow: Escrow; onClose: ()
       {err && <div style={{ padding: '10px 14px', borderRadius: 8, background: T.red + '15', border: `1px solid ${T.red}40`, fontSize: 12, color: T.red, fontFamily: T.mono, marginBottom: 12 }}>Error: {err}</div>}
       <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
         <button onClick={onClose} style={{ padding: '9px 20px', borderRadius: 99, background: 'transparent', color: T.muted, border: `1px solid ${T.border}`, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-        <Btn onClick={deliver} disabled={!input || input.length < 10 || busy} style={{ padding: '9px 20px', borderRadius: 99, background: T.purple, color: '#fff', border: 'none', fontWeight: 800, fontSize: 13, cursor: busy ? 'not-allowed' : 'pointer', opacity: (!input || input.length < 10 || busy) ? 0.5 : 1, flex: 1 }}>
+        <Btn onClick={deliver} disabled={!input || input.length < 10 || busy} style={{ flex: 1, padding: '9px 20px', borderRadius: 99, background: T.purple, color: '#fff', border: 'none', fontWeight: 800, fontSize: 13, cursor: busy ? 'not-allowed' : 'pointer', opacity: (!input || input.length < 10 || busy) ? 0.5 : 1 }}>
           {busy ? 'Submitting...' : '📦 Deliver Work'}
         </Btn>
       </div>
@@ -286,23 +283,22 @@ function EscrowCard({ escrow, myAddress, onDeliver, onRefresh }: { escrow: Escro
   }
 
   return (
-    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, borderLeft: `3px solid ${color}`, overflow: 'hidden' }}>
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, borderLeft: `3px solid ${color}`, overflow: 'hidden', transition: 'box-shadow 0.2s' }}>
       <button
         onClick={() => setExpanded(e => !e)}
         style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: T.text, textAlign: 'left' }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{escrow.title || `Escrow #${escrow.id}`}</div>
             <div style={{ fontSize: 11, color: T.muted, fontFamily: T.mono, marginTop: 2 }}>{fmt(escrow.amount)} RSTT</div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 10 }}>
           <Badge state={escrow.state} />
           <span style={{ color: T.muted, fontSize: 14, transition: 'transform 0.2s', display: 'inline-block', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
         </div>
       </button>
-
       {expanded && (
         <div style={{ padding: '0 16px 16px', borderTop: `1px solid ${T.border}` }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', margin: '14px 0' }}>
@@ -318,17 +314,13 @@ function EscrowCard({ escrow, myAddress, onDeliver, onRefresh }: { escrow: Escro
               </div>
             ))}
           </div>
-
           {state === 'Pending' && <div style={{ padding: '8px 12px', borderRadius: 8, marginBottom: 12, background: T.accentDim, border: `1px solid ${T.accentMid}`, fontSize: 11, color: T.accent, fontFamily: T.mono }}>⚡ Reactivity watching for deposit...</div>}
           {state === 'Funded' && <div style={{ padding: '8px 12px', borderRadius: 8, marginBottom: 12, background: T.accentDim, border: `1px solid ${T.accentMid}`, fontSize: 11, color: T.accent, fontFamily: T.mono }}>⚡ Funded — freelancer can now deliver work</div>}
           {state === 'Delivered' && <div style={{ padding: '8px 12px', borderRadius: 8, marginBottom: 12, background: T.accentDim, border: `1px solid ${T.accentMid}`, fontSize: 11, color: T.accent, fontFamily: T.mono }}>⚡ Reactivity auto-releasing payment...</div>}
           {state === 'Released' && <div style={{ padding: '8px 12px', borderRadius: 8, marginBottom: 12, background: T.green + '12', border: `1px solid ${T.green}30`, fontSize: 11, color: T.green, fontFamily: T.mono }}>✅ Payment auto-released by Somnia Reactivity</div>}
-
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             {state === 'Funded' && isFreelancer && (
-              <Btn onClick={onDeliver} style={{ padding: '7px 16px', borderRadius: 99, cursor: 'pointer', background: T.purple, color: '#fff', border: 'none', fontWeight: 700, fontSize: 12, fontFamily: T.sans }}>
-                📦 Deliver Work
-              </Btn>
+              <Btn onClick={onDeliver} style={{ padding: '7px 16px', borderRadius: 99, cursor: 'pointer', background: T.purple, color: '#fff', border: 'none', fontWeight: 700, fontSize: 12, fontFamily: T.sans }}>📦 Deliver Work</Btn>
             )}
             {isClient && state === 'Delivered' && (
               <Btn onClick={dispute} style={{ padding: '7px 16px', borderRadius: 99, cursor: 'pointer', background: T.red + '15', color: T.red, border: `1px solid ${T.red}40`, fontWeight: 700, fontSize: 12, fontFamily: T.sans }}>⚠️ Dispute</Btn>
@@ -386,14 +378,14 @@ export default function App() {
       const eth = (window as any).ethereum
       if (!eth) return
       const chainId = await eth.request({ method: 'eth_chainId' })
-      if (chainId !== '0xc478') {
+      if (chainId !== '0xC488') {
         try {
-          await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0xc478' }] })
+          await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0xC488' }] })
         } catch (e: any) {
           if (e.code === 4902) {
             await eth.request({
               method: 'wallet_addEthereumChain',
-              params: [{ chainId: '0xc478', chainName: 'Somnia Testnet', nativeCurrency: { name: 'Somnia Test Token', symbol: 'STT', decimals: 18 }, rpcUrls: ['https://dream-rpc.somnia.network'], blockExplorerUrls: ['https://shannon-explorer.somnia.network'] }]
+              params: [{ chainId: '0xC488', chainName: 'Somnia Testnet', nativeCurrency: { name: 'Somnia Test Token', symbol: 'STT', decimals: 18 }, rpcUrls: ['https://dream-rpc.somnia.network'], blockExplorerUrls: ['https://shannon-explorer.somnia.network'] }]
             })
           }
         }
@@ -434,17 +426,18 @@ export default function App() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         input::placeholder { color: #4A6680; }
         button:hover:not(:disabled) { filter: brightness(1.1); }
-        .modal-overlay { align-items: center !important; }
-        .modal-inner { border-radius: 20px !important; }
-        .header-balances { display: flex; gap: 8px; align-items: center; }
         .stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 28px; }
-        .hero-title { font-size: 42px; }
+        .hero-title { font-size: 42px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 14px; }
+        .header-connected { display: flex; gap: 8px; align-items: center; }
+        .bal-rstt { display: flex; padding: 6px 10px; border-radius: 8px; background: #141C28; border: 1px solid #1E2D3D; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #4A6680; }
+        .bal-stt { display: flex; padding: 6px 10px; border-radius: 8px; background: #141C28; border: 1px solid #1E2D3D; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #4A6680; }
         @media (max-width: 600px) {
           .modal-overlay { align-items: flex-end !important; }
           .modal-inner { border-radius: 20px 20px 0 0 !important; }
-          .header-balances { display: none !important; }
-          .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-          .hero-title { font-size: 28px !important; }
+          .stats-grid { grid-template-columns: 1fr 1fr; }
+          .stats-grid > div:last-child { grid-column: span 2; }
+          .hero-title { font-size: 26px !important; }
+          .bal-stt { display: none !important; }
         }
       `}</style>
 
@@ -460,24 +453,22 @@ export default function App() {
             <div style={{ fontSize: 9, color: T.muted, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: T.mono }}>Somnia Reactivity</div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="header-connected">
           {isConnected && <>
-            <div className="header-balances">
-              <Btn onClick={getFaucet} style={{ padding: '7px 14px', borderRadius: 99, background: T.accentDim, color: T.accent, border: `1px solid ${T.accentMid}`, fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: T.mono }}>🚰 Get RSTT</Btn>
-              <div style={{ padding: '6px 12px', borderRadius: 8, background: T.surface2, border: '1px solid #1E2D3D', fontSize: 11, fontFamily: T.mono, color: T.muted }}><span style={{ color: T.accent, fontWeight: 700 }}>{parseFloat(formatEther(rsttBal)).toFixed(1)}</span> RSTT</div>
-              <div style={{ padding: '6px 12px', borderRadius: 8, background: T.surface2, border: '1px solid #1E2D3D', fontSize: 11, fontFamily: T.mono, color: T.muted }}>{sttBal ? parseFloat(formatEther(sttBal.value)).toFixed(3) : '—'} STT</div>
-            </div>
-            <Btn onClick={() => disconnect()} style={{ padding: '7px 14px', borderRadius: 99, background: T.surface2, color: T.accent, border: '1px solid #4FFFB035', fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: T.mono }}>✓ {short(address ?? '')}</Btn>
+            <Btn onClick={getFaucet} style={{ padding: '7px 12px', borderRadius: 99, background: T.accentDim, color: T.accent, border: `1px solid ${T.accentMid}`, fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: T.mono, whiteSpace: 'nowrap' }}>🚰 Get RSTT</Btn>
+            <div className="bal-rstt"><span style={{ color: T.accent, fontWeight: 700 }}>{parseFloat(formatEther(rsttBal)).toFixed(1)}</span>&nbsp;RSTT</div>
+            <div className="bal-stt">{sttBal ? parseFloat(formatEther(sttBal.value)).toFixed(3) : '—'}&nbsp;STT</div>
+            <Btn onClick={() => disconnect()} style={{ padding: '7px 12px', borderRadius: 99, background: T.surface2, color: T.accent, border: '1px solid #4FFFB035', fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: T.mono, whiteSpace: 'nowrap' }}>✓ {short(address ?? '')}</Btn>
           </>}
-          {!isConnected && <Btn onClick={() => setShowWallet(true)} style={{ padding: '10px 22px', borderRadius: 99, background: T.accent, color: '#0A0E14', border: 'none', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>Connect Wallet</Btn>}
+          {!isConnected && <Btn onClick={() => setShowWallet(true)} style={{ padding: '10px 20px', borderRadius: 99, background: T.accent, color: '#0A0E14', border: 'none', fontWeight: 800, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>Connect Wallet</Btn>}
         </div>
       </header>
 
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 14px', borderRadius: 99, marginBottom: 14, background: T.accentDim, border: `1px solid ${T.accentMid}`, fontSize: 11, color: T.accent, fontFamily: T.mono, fontWeight: 700 }}>⚡ POWERED BY SOMNIA REACTIVITY</div>
-          <h1 className="hero-title" style={{ fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: 12 }}>Freelance escrow that<br /><span style={{ color: T.accent }}>executes itself.</span></h1>
-          <p style={{ fontSize: 14, color: T.muted, maxWidth: 400, margin: '0 auto', lineHeight: 1.7 }}>No Upwork. No PayPal. No 20% fees. Lock funds on-chain, deliver work, get paid — automatically via Somnia Reactivity.</p>
+          <h1 className="hero-title">Freelance escrow that<br /><span style={{ color: T.accent }}>executes itself.</span></h1>
+          <p style={{ fontSize: 15, color: T.muted, maxWidth: 460, margin: '0 auto', lineHeight: 1.7 }}>No Upwork. No PayPal. No 20% fees. Lock funds on-chain, deliver work, get paid — automatically via Somnia Reactivity.</p>
         </div>
 
         <div className="stats-grid">
@@ -487,13 +478,13 @@ export default function App() {
             { label: 'Auto-Released', value: String(escrows.filter(e => e.state === 3).length), color: T.green },
           ].map(({ label, value, color }) => (
             <div key={label} style={{ background: T.surface, border: '1px solid #1E2D3D', borderRadius: 14, padding: '14px 16px' }}>
-              <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>{label}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color, fontFamily: T.mono }}>{value}</div>
+              <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>{label}</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color, fontFamily: T.mono }}>{value}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, gap: 10 }}>
           <div style={{ display: 'flex', gap: 4 }}>
             {(['all', 'mine'] as const).map(t => (
               <Btn key={t} onClick={() => setTab(t)} style={{ padding: '7px 14px', borderRadius: 99, cursor: 'pointer', background: tab === t ? T.accentDim : 'transparent', border: `1px solid ${tab === t ? T.accentMid : T.border}`, color: tab === t ? T.accent : T.muted, fontSize: 11, fontWeight: 700, fontFamily: T.mono, textTransform: 'uppercase' }}>
@@ -507,7 +498,7 @@ export default function App() {
         {loading && <div style={{ textAlign: 'center', padding: 40, color: T.muted, fontFamily: T.mono }}>Loading...</div>}
 
         {!loading && visible.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '50px 20px', background: T.surface, border: '1px solid #1E2D3D', borderRadius: 16 }}>
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: T.surface, border: '1px solid #1E2D3D', borderRadius: 16 }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>⚡</div>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>No escrows yet</div>
             <div style={{ fontSize: 13, color: T.muted, marginBottom: 20 }}>{isConnected ? 'Create your first trustless escrow' : 'Connect your wallet to get started'}</div>
@@ -522,7 +513,7 @@ export default function App() {
           ))}
         </div>
 
-        <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid #1E2D3D', display: 'flex', justifyContent: 'space-between', fontSize: 10, color: T.muted, fontFamily: T.mono, flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ marginTop: 48, paddingTop: 20, borderTop: '1px solid #1E2D3D', display: 'flex', justifyContent: 'space-between', fontSize: 10, color: T.muted, fontFamily: T.mono, flexWrap: 'wrap', gap: 8 }}>
           <span>REACTPAY · SOMNIA REACTIVITY HACKATHON 2026</span>
           <div style={{ display: 'flex', gap: 16 }}>
             <a href="https://shannon-explorer.somnia.network" target="_blank" rel="noreferrer" style={{ color: T.muted, textDecoration: 'none' }}>EXPLORER ↗</a>
