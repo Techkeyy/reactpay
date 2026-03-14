@@ -23,18 +23,6 @@ const publicClient = createPublicClient({ chain: somniaTestnet, transport: http(
 
 const WC_PROJECT_ID = 'b8a1daa2dd22335f4e2a5a2d3c9d9e1f'
 
-// helper: estimate gas or fall back to default
-async function estimateGas(eth: any, params: { from: string; to: string; data: string }): Promise<string> {
-  try {
-    const estimate = await eth.request({ method: 'eth_estimateGas', params: [{ ...params, gasPrice: '0x77359400' }] })
-    // add 20% buffer
-    const buffered = Math.floor(parseInt(estimate, 16) * 1.2).toString(16)
-    return '0x' + buffered
-  } catch {
-    return '0x7A120' // fallback 500k gas
-  }
-}
-
 interface Escrow {
   id: bigint; client: string; freelancer: string; amount: bigint; title: string
   deliveryHash: string; state: number; createdBlock: bigint; fundedBlock: bigint
@@ -91,10 +79,10 @@ function WalletModal({ onClose }: { onClose: () => void }) {
       await connect({ connector: wallet.connector })
       onClose()
     } catch (e: any) {
-      if (['metamask', 'rabby', 'zerion'].includes(wallet.id)) {
+      if (wallet.id === 'metamask' || wallet.id === 'rabby' || wallet.id === 'zerion') {
         try {
           const eth = (window as any).ethereum
-          if (!eth) throw new Error("No wallet found — open this site inside your wallet's browser")
+          if (!eth) throw new Error('No wallet found — open this site inside your wallet\'s browser')
           await eth.request({ method: 'eth_requestAccounts' })
           onClose()
           return
@@ -210,13 +198,11 @@ function CreateModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
         const accounts: string[] = await eth.request({ method: 'eth_requestAccounts' })
         setStatus('Step 1/2: Approving RSTT...')
         const approveData = encodeFunctionData({ abi: MOCK_STT_ABI, functionName: 'approve', args: [REACT_PAY_ADDRESS, amt] })
-        const approveGas = await estimateGas(eth, { from: accounts[0], to: MOCK_STT_ADDRESS, data: approveData })
-        const appTx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: MOCK_STT_ADDRESS, data: approveData, gas: approveGas, gasPrice: '0x77359400' }] })
+        const appTx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: MOCK_STT_ADDRESS, data: approveData }] })
         await publicClient.waitForTransactionReceipt({ hash: appTx as `0x${string}`, timeout: 120_000 })
         setStatus('Step 2/2: Creating escrow...')
         const createData = encodeFunctionData({ abi: REACT_PAY_ABI, functionName: 'createEscrow', args: [freelancer as `0x${string}`, amt, title, BigInt(300)] })
-        const createGas = await estimateGas(eth, { from: accounts[0], to: REACT_PAY_ADDRESS, data: createData })
-        const tx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: REACT_PAY_ADDRESS, data: createData, gas: createGas, gasPrice: '0x77359400' }] })
+        const tx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: REACT_PAY_ADDRESS, data: createData }] })
         await publicClient.waitForTransactionReceipt({ hash: tx as `0x${string}`, timeout: 120_000 })
       }
       setStatus('Done! Reactivity is now watching...')
@@ -267,8 +253,7 @@ function DeliverModal({ escrow, onClose, onDone }: { escrow: Escrow; onClose: ()
         const { encodeFunctionData } = await import('viem')
         const data = encodeFunctionData({ abi: REACT_PAY_ABI, functionName: 'deliverWork', args: [escrow.id, hash] })
         const accounts: string[] = await eth.request({ method: 'eth_requestAccounts' })
-        const deliverGas = await estimateGas(eth, { from: accounts[0], to: REACT_PAY_ADDRESS, data })
-        const txHash = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: REACT_PAY_ADDRESS, data, gas: deliverGas, gasPrice: '0x77359400' }] })
+        const txHash = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: REACT_PAY_ADDRESS, data }] })
         await publicClient.waitForTransactionReceipt({ hash: txHash as `0x${string}`, timeout: 120_000 })
       }
       setStatus('Delivered! Reactivity will auto-release payment ⚡')
@@ -455,8 +440,7 @@ export default function App() {
         const { encodeFunctionData } = await import('viem')
         const accounts: string[] = await eth.request({ method: 'eth_requestAccounts' })
         const data = encodeFunctionData({ abi: MOCK_STT_ABI, functionName: 'faucet', args: [parseUnits('1000', 18)] })
-        const faucetGas = await estimateGas(eth, { from: accounts[0], to: MOCK_STT_ADDRESS, data })
-        const tx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: MOCK_STT_ADDRESS, data, gas: faucetGas, gasPrice: '0x77359400' }] })
+        const tx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: MOCK_STT_ADDRESS, data }] })
         await publicClient.waitForTransactionReceipt({ hash: tx as `0x${string}`, timeout: 120_000 })
       }
       fetchRSTT()
