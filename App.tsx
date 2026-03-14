@@ -23,30 +23,15 @@ const publicClient = createPublicClient({ chain: somniaTestnet, transport: http(
 
 const WC_PROJECT_ID = 'b8a1daa2dd22335f4e2a5a2d3c9d9e1f'
 
-async function waitForEthereum(timeout = 3000): Promise<any> {
-  return new Promise((resolve) => {
-    if ((window as any).ethereum) return resolve((window as any).ethereum)
-    let elapsed = 0
-    const interval = setInterval(() => {
-      elapsed += 100
-      if ((window as any).ethereum) {
-        clearInterval(interval)
-        resolve((window as any).ethereum)
-      } else if (elapsed >= timeout) {
-        clearInterval(interval)
-        resolve(null)
-      }
-    }, 100)
-  })
-}
-
+// helper: estimate gas or fall back to default
 async function estimateGas(eth: any, params: { from: string; to: string; data: string }): Promise<string> {
   try {
     const estimate = await eth.request({ method: 'eth_estimateGas', params: [{ ...params, gasPrice: '0x77359400' }] })
+    // add 20% buffer
     const buffered = Math.floor(parseInt(estimate, 16) * 1.2).toString(16)
     return '0x' + buffered
   } catch {
-    return '0x7A120'
+    return '0x7A120' // fallback 500k gas
   }
 }
 
@@ -108,7 +93,7 @@ function WalletModal({ onClose }: { onClose: () => void }) {
     } catch (e: any) {
       if (['metamask', 'rabby', 'zerion'].includes(wallet.id)) {
         try {
-          const eth = await waitForEthereum()
+          const eth = (window as any).ethereum
           if (!eth) throw new Error("No wallet found — open this site inside your wallet's browser")
           await eth.request({ method: 'eth_requestAccounts' })
           onClose()
