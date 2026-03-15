@@ -48,134 +48,144 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
   )
 }
 
-// ─── WALLET MODAL (fully rewritten) ────────────────────────────────────────────
+// ─── Detect which injected wallets are actually present ───────────────────────
+function detectInjectedWallets(): { id: string; label: string; desc: string; icon: string }[] {
+  const eth = (window as any).ethereum
+  if (!eth) return []
+
+  const found: { id: string; label: string; desc: string; icon: string }[] = []
+  const providers: any[] = eth.providers ?? [eth]
+
+  for (const p of providers) {
+    if (p.isRabby)      { found.push({ id: 'rabby',   label: 'Rabby',         desc: 'Detected browser extension', icon: '🐰' }); continue }
+    if (p.isBraveWallet){ found.push({ id: 'brave',   label: 'Brave Wallet',  desc: 'Detected browser extension', icon: '🦁' }); continue }
+    if (p.isCoinbaseWallet){ found.push({ id: 'coinbase', label: 'Coinbase Wallet', desc: 'Detected browser extension', icon: '🔵' }); continue }
+    if (p.isTrust)      { found.push({ id: 'trust',   label: 'Trust Wallet',  desc: 'Detected browser extension', icon: '🛡️' }); continue }
+    if (p.isMetaMask)   { found.push({ id: 'metamask',label: 'MetaMask',      desc: 'Detected browser extension', icon: '🦊' }); continue }
+    // generic fallback for any other injected provider
+    found.push({ id: 'injected', label: 'Browser Wallet', desc: 'Detected browser extension', icon: '🌐' })
+  }
+
+  // de-dupe by id (multiple providers array entries can match the same wallet)
+  return found.filter((w, i, arr) => arr.findIndex(x => x.id === w.id) === i)
+}
+
+// ─── WALLET MODAL ─────────────────────────────────────────────────────────────
 function WalletModal({ onClose }: { onClose: () => void }) {
-  const { connect, isPending } = useConnect()
+  const { connect } = useConnect()
   const { disconnect } = useDisconnect()
   const { isConnected } = useAccount()
   const [connecting, setConnecting] = useState<string | null>(null)
   const [err, setErr] = useState('')
   const closedRef = useRef(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Close as soon as wagmi confirms connected – but only after user triggered a connect
+  // Detected injected wallets (computed once on mount)
+  const [injectedWallets] = useState(() => {
+    if (typeof window === 'undefined') return []
+    return detectInjectedWallets()
+  })
+
+  // Close as soon as wagmi confirms connection
   useEffect(() => {
     if (isConnected && connecting && !closedRef.current) {
       closedRef.current = true
-      setTimeout(onClose, 300)
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      setTimeout(onClose, 250)
     }
   }, [isConnected, connecting, onClose])
 
-  const wallets = [
-    {
-      id: 'metamask',
-      label: 'MetaMask',
-      desc: 'Browser extension wallet',
-      icon: '🦊',
-      getConnector: () => injected({ target: 'metaMask' }),
-    },
-    {
-      id: 'rabby',
-      label: 'Rabby',
-      desc: 'Browser extension wallet',
-      icon: '🐰',
-      getConnector: () => injected({ target: 'rabby' }),
-    },
-    {
-      id: 'injected',
-      label: 'Browser Wallet',
-      desc: 'Any injected wallet (Trust, Brave…)',
-      icon: '🌐',
-      getConnector: () => injected(),
-    },
-    {
-      id: 'walletconnect',
-      label: 'WalletConnect',
-      desc: 'Mobile & all WC wallets',
-      icon: '🔗',
-      getConnector: () => walletConnect({ projectId: WC_PROJECT_ID, showQrModal: true }),
-    },
-  ]
+  // Cleanup timeout on unmount
+  useEffect(() => () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }, [])
 
-  async function handleConnect(wallet: typeof wallets[0]) {
+  async function handleInjected(walletId: string) {
     if (connecting) return
-    setConnecting(wallet.id)
+    setConnecting(walletId)
     setErr('')
 
+    // Always clear previous session so wagmi never silently re-uses it
+    await disconnect()
+    await new Promise(r => setTimeout(r, 150))
+
+    // Set a 15 s timeout — if the wallet extension never responds, bail out
+    // with a helpful message instead of spinning forever
+    timeoutRef.current = setTimeout(() => {
+      if (!closedRef.current) {
+        setConnecting(null)
+        setErr('Wallet didn\'t respond within 15 s. Make sure the extension is unlocked, then try again.')
+      }
+    }, 15_000)
+
     try {
-      // Always fully clear the previous session first so wagmi never
-      // auto-reconnects without showing the wallet picker.
-      await disconnect()
-      await new Promise(r => setTimeout(r, 200))
-
-      const connector = wallet.getConnector()
-
-      // WalletConnect is handled entirely by wagmi / its own modal
-      if (wallet.id === 'walletconnect') {
-        connect({ connector })
-        // Don't await – WalletConnect opens its own QR modal; we wait for the
-        // isConnected effect above to close this modal.
-        return
-      }
-
-      // For injected wallets try wagmi connect first, fall back to raw provider
-      try {
-        await connect({ connector })
-      } catch (wagmiErr: any) {
-        // wagmi threw – try raw ethereum request as a final fallback
-        const eth = (window as any).ethereum
-        if (!eth) {
-          throw new Error(
-            wallet.id === 'metamask'
-              ? 'MetaMask extension not found. Install it from metamask.io or open this site inside MetaMask\'s browser.'
-              : 'No injected wallet found. Make sure your wallet extension is enabled.'
-          )
-        }
-        await eth.request({ method: 'eth_requestAccounts' })
-        // If raw call succeeded, wagmi state may not update instantly –
-        // close manually after a short delay.
-        await new Promise(r => setTimeout(r, 600))
-        if (!closedRef.current) {
-          closedRef.current = true
-          onClose()
-        }
-        return
-      }
+      // Use the generic injected() connector — it calls eth_requestAccounts
+      // on window.ethereum directly, which always triggers the extension popup
+      const connector = injected()
+      await connect({ connector })
+      // success handled by the isConnected effect above
     } catch (e: any) {
-      setErr(e?.message ?? e?.shortMessage ?? 'Connection failed. Try again.')
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      // User rejected → don't show an error, just reset
+      const msg: string = e?.message ?? e?.shortMessage ?? ''
+      if (msg.toLowerCase().includes('rejected') || msg.toLowerCase().includes('denied') || (e?.code === 4001)) {
+        setConnecting(null)
+        return
+      }
+      // Fallback: raw eth_requestAccounts (handles edge-cases where wagmi connector fails)
+      try {
+        const eth = (window as any).ethereum
+        if (!eth) throw new Error('No wallet extension found. Install one and refresh the page.')
+        await eth.request({ method: 'eth_requestAccounts' })
+        await new Promise(r => setTimeout(r, 500))
+        if (!closedRef.current) { closedRef.current = true; onClose() }
+      } catch (e2: any) {
+        const msg2: string = e2?.message ?? ''
+        if (!msg2.toLowerCase().includes('rejected') && !msg2.toLowerCase().includes('denied')) {
+          setErr(msg2 || 'Connection failed. Make sure your wallet is unlocked.')
+        }
+        setConnecting(null)
+      }
+    }
+  }
+
+  async function handleWalletConnect() {
+    if (connecting) return
+    setConnecting('walletconnect')
+    setErr('')
+    await disconnect()
+    await new Promise(r => setTimeout(r, 150))
+    try {
+      const connector = walletConnect({ projectId: WC_PROJECT_ID, showQrModal: true })
+      connect({ connector })
+      // WalletConnect opens its own modal; isConnected effect will close ours
+    } catch (e: any) {
+      setErr(e?.message ?? 'WalletConnect failed')
       setConnecting(null)
     }
   }
+
+  const noWalletFound = injectedWallets.length === 0
 
   return (
     <Modal onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <div style={{ fontWeight: 800, fontSize: 18 }}>Connect Wallet</div>
-          <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>Choose your wallet to continue</div>
+          <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>
+            {noWalletFound ? 'No browser wallet detected' : 'Choose your wallet to continue'}
+          </div>
         </div>
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: T.muted, fontSize: 22, cursor: 'pointer' }}>×</button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {wallets.map(wallet => {
+
+        {/* Detected injected wallets */}
+        {injectedWallets.map(wallet => {
           const isThis = connecting === wallet.id
           const isOther = !!connecting && connecting !== wallet.id
           return (
-            <button
-              key={wallet.id}
-              onClick={() => handleConnect(wallet)}
-              disabled={!!connecting}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 16,
-                padding: '14px 18px', borderRadius: 14,
-                background: isThis ? T.accentDim : T.surface2,
-                border: `1px solid ${isThis ? T.accentMid : T.border}`,
-                cursor: connecting ? 'not-allowed' : 'pointer',
-                color: T.text, textAlign: 'left',
-                opacity: isOther ? 0.45 : 1,
-                transition: 'all 0.15s',
-              }}
-            >
+            <button key={wallet.id} onClick={() => handleInjected(wallet.id)} disabled={!!connecting}
+              style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 18px', borderRadius: 14, background: isThis ? T.accentDim : T.surface2, border: `1px solid ${isThis ? T.accentMid : T.border}`, cursor: connecting ? 'not-allowed' : 'pointer', color: T.text, textAlign: 'left', opacity: isOther ? 0.45 : 1, transition: 'all 0.15s' }}>
               <div style={{ fontSize: 26, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, background: T.surface, border: `1px solid ${T.border}`, flexShrink: 0 }}>
                 {isThis ? '⏳' : wallet.icon}
               </div>
@@ -184,12 +194,42 @@ function WalletModal({ onClose }: { onClose: () => void }) {
                 <div style={{ fontSize: 11, color: T.muted, marginTop: 2, fontFamily: T.mono }}>{wallet.desc}</div>
               </div>
               {isThis
-                ? <div style={{ fontSize: 11, color: T.accent, fontFamily: T.mono, flexShrink: 0 }}>Connecting…</div>
-                : <div style={{ color: T.muted, fontSize: 18, flexShrink: 0 }}>›</div>
-              }
+                ? <div style={{ fontSize: 11, color: T.accent, fontFamily: T.mono, flexShrink: 0 }}>Check extension…</div>
+                : <div style={{ color: T.muted, fontSize: 18, flexShrink: 0 }}>›</div>}
             </button>
           )
         })}
+
+        {/* If no extension found, show a hint */}
+        {noWalletFound && (
+          <div style={{ padding: '14px 16px', borderRadius: 14, background: T.surface2, border: `1px solid ${T.border}`, fontSize: 12, color: T.muted, lineHeight: 1.6 }}>
+            No wallet extension detected in this browser.<br />
+            Install <a href="https://rabby.io" target="_blank" rel="noreferrer" style={{ color: T.accent }}>Rabby</a> or{' '}
+            <a href="https://metamask.io" target="_blank" rel="noreferrer" style={{ color: T.accent }}>MetaMask</a>,
+            then refresh — or use WalletConnect below to connect a mobile wallet.
+          </div>
+        )}
+
+        {/* WalletConnect always shown */}
+        {(() => {
+          const isThis = connecting === 'walletconnect'
+          const isOther = !!connecting && connecting !== 'walletconnect'
+          return (
+            <button onClick={handleWalletConnect} disabled={!!connecting}
+              style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 18px', borderRadius: 14, background: isThis ? T.accentDim : T.surface2, border: `1px solid ${isThis ? T.accentMid : T.border}`, cursor: connecting ? 'not-allowed' : 'pointer', color: T.text, textAlign: 'left', opacity: isOther ? 0.45 : 1, transition: 'all 0.15s' }}>
+              <div style={{ fontSize: 26, width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, background: T.surface, border: `1px solid ${T.border}`, flexShrink: 0 }}>
+                {isThis ? '⏳' : '🔗'}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>WalletConnect</div>
+                <div style={{ fontSize: 11, color: T.muted, marginTop: 2, fontFamily: T.mono }}>Mobile & all WC wallets</div>
+              </div>
+              {isThis
+                ? <div style={{ fontSize: 11, color: T.accent, fontFamily: T.mono, flexShrink: 0 }}>Opening QR…</div>
+                : <div style={{ color: T.muted, fontSize: 18, flexShrink: 0 }}>›</div>}
+            </button>
+          )
+        })()}
       </div>
 
       {err && (
