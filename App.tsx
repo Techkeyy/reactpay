@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAccount, useConnect, useDisconnect, useBalance, useWalletClient, useChainId } from 'wagmi'
-import { injected, walletConnect } from 'wagmi/connectors'
+import { injected, walletConnect } from 'wagmi/connectors' 
 import { formatEther, parseUnits, keccak256, toBytes, createPublicClient, http } from 'viem'
 import { MOCK_STT_ADDRESS, REACT_PAY_ADDRESS, MOCK_STT_ABI, REACT_PAY_ABI, getStateName, STATE_COLOR } from '@/lib/contracts'
 import { somniaTestnet } from '@/lib/chain'
