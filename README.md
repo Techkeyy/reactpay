@@ -52,7 +52,7 @@ paysom/
 ```
 
 ## 🧪 Try It Yourself
-1. Visit https://reactpay-app.vercel.app
+1. Visit https://paysom.vercel.app/
 2. Connect your wallet (MetaMask, Rabby, or Zerion)
 3. Switch to Somnia Testnet (auto-prompted)
 4. Get test STT from https://testnet.somnia.network
