@@ -491,7 +491,7 @@ export default function App() {
             {showAccountMenu && (
               <div className="account-menu">
                 <div style={{ padding: '8px 12px', fontSize: 10, color: T.muted, fontFamily: T.mono, borderBottom: `1px solid ${T.border}`, marginBottom: 6 }}>{address}</div>
-                <button onClick={() => { setShowAccountMenu(false); disconnect(); setTimeout(() => setShowWallet(true), 100) }} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, background: 'transparent', border: 'none', color: T.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>🔄 Switch Wallet</button>
+                <button onClick={() => { setShowAccountMenu(false); disconnect(); setTimeout(() => setShowWallet(true), 300) }} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, background: 'transparent', border: 'none', color: T.text, fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>🔄 Switch Wallet</button>
                 <button onClick={handleDisconnect} style={{ width: '100%', padding: '9px 12px', borderRadius: 8, background: 'transparent', border: 'none', color: T.red, fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>⏏ Disconnect</button>
               </div>
             )}
