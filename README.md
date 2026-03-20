@@ -1,16 +1,16 @@
-# ⚡ ReactPay — Trustless Freelance Escrow on Somnia
+# ⚡ PaySom — Trustless Freelance Escrow on Somnia
 
-> Freelancers lose 20% to platforms like Upwork. ReactPay fixes this with trustless escrow on Somnia — smart contracts that auto-release payment the moment work is delivered. No middlemen. No fees. No disputes.
+> Freelancers lose 20% to platforms like Upwork. PaySom fixes this with trustless escrow on Somnia — smart contracts that auto-release payment the moment work is delivered. No middlemen. No fees. No disputes.
 
 ## 🔗 Links
-- **Live Demo:** https://reactpay-fvd5.vercel.app/
-- **Video Demo:** https://youtu.be/Dep1UjfOOws?si=-Ouxlcz6b8OnPyxI
+- **Live Demo:** https://reactpay-app.vercel.app
+- **Video Demo:** https://www.loom.com/share/dc79bcbd39cd4a2c874e1341bf84e04d
 
 ## 📜 Contract Addresses (Somnia Testnet)
 | Contract | Address |
 |----------|---------|
 | MockSTT (RSTT) | `0xeC1CF1647FB1406D33eC577A279523C425D71D9c` |
-| ReactPay | `0xDE76d8b12Fe677BFaA9a5fA40Ec57B530fBaB202` |
+| PaySom | `0xDE76d8b12Fe677BFaA9a5fA40Ec57B530fBaB202` |
 
 ## 🚀 How It Works
 1. **Client** creates an escrow — locks RSTT tokens for a specific freelancer
@@ -20,7 +20,7 @@
 5. **No human intervention required** — the contract executes itself
 
 ## ⚡ Somnia Reactivity Integration
-ReactPay inherits `SomniaEventHandler` and uses `_onEvent` to:
+PaySom inherits `SomniaEventHandler` and uses `_onEvent` to:
 - Listen for ERC-20 `Transfer` events → marks escrow as Funded
 - Listen for `WorkDelivered` events → auto-releases payment to freelancer
 
@@ -34,11 +34,11 @@ Both subscriptions are registered on-chain via the `subscribe.ts` script.
 
 ## 📁 Project Structure
 ```
-reactpay/
+paysom/
 ├── contracts/
 │   ├── SomniaEventHandler.sol
 │   ├── MockSTT.sol
-│   └── ReactPay.sol
+│   └── PaySom.sol
 ├── scripts/
 │   └── subscribe.ts
 └── frontend/
@@ -52,7 +52,7 @@ reactpay/
 ```
 
 ## 🧪 Try It Yourself
-1. Visit https://reactpay-fvd5.vercel.app/
+1. Visit https://reactpay-app.vercel.app
 2. Connect your wallet (MetaMask, Rabby, or Zerion)
 3. Switch to Somnia Testnet (auto-prompted)
 4. Get test STT from https://testnet.somnia.network
