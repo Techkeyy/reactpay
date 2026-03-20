@@ -430,14 +430,13 @@ export default function App() {
     setShowAccountMenu(false)
     await disconnect()
     setRsttBal(0n)
-    // clear wagmi storage so it doesn't auto-reconnect
     try {
       localStorage.removeItem('wagmi.store')
       localStorage.removeItem('wagmi.connected')
       localStorage.removeItem('wagmi.wallet')
       localStorage.removeItem('wagmi.injected.connected')
     } catch {}
-    setTimeout(() => setShowWallet(true), 300)
+    // just disconnect — user clicks Connect Wallet to reconnect
   }
 
   async function handleSwitchWallet() {
