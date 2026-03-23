@@ -160,28 +160,25 @@ function CreateModal({ onClose, onDone }: { onClose: () => void; onDone: () => v
     setBusy(true); setErr('')
     try {
       const amt = parseUnits(amount, 18)
-      if (wc) {
-        setStatus('Step 1/2: Approving RSTT...')
-        const appTx = await wc.writeContract({ address: MOCK_STT_ADDRESS, abi: MOCK_STT_ABI, functionName: 'approve', args: [REACT_PAY_ADDRESS, amt] })
-        await publicClient.waitForTransactionReceipt({ hash: appTx })
-        setStatus('Step 2/2: Creating escrow...')
-        const tx = await wc.writeContract({ address: REACT_PAY_ADDRESS, abi: REACT_PAY_ABI, functionName: 'createEscrow', args: [freelancer as `0x${string}`, amt, title, BigInt(300)] })
-        await publicClient.waitForTransactionReceipt({ hash: tx })
-      } else {
-        const eth = (window as any).ethereum
-        if (!eth) throw new Error('No wallet found')
-        const { encodeFunctionData } = await import('viem')
-        const accounts: string[] = await eth.request({ method: 'eth_requestAccounts' })
-        setStatus('Step 1/2: Approving RSTT...')
-        const approveData = encodeFunctionData({ abi: MOCK_STT_ABI, functionName: 'approve', args: [REACT_PAY_ADDRESS, amt] })
-        const appTx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: MOCK_STT_ADDRESS, data: approveData }] })
-        await publicClient.waitForTransactionReceipt({ hash: appTx as `0x${string}`, timeout: 120_000 })
-        setStatus('Step 2/2: Creating escrow...')
-        const createData = encodeFunctionData({ abi: REACT_PAY_ABI, functionName: 'createEscrow', args: [freelancer as `0x${string}`, amt, title, BigInt(300)] })
-        const tx = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: REACT_PAY_ADDRESS, data: createData }] })
-        await publicClient.waitForTransactionReceipt({ hash: tx as `0x${string}`, timeout: 120_000 })
-      }
-      setStatus('Done! Reactivity is now watching...')
+      const eth = (window as any).ethereum
+      if (!eth) throw new Error('No wallet found')
+      const { encodeFunctionData } = await import('viem')
+      const accounts: string[] = await eth.request({ method: 'eth_requestAccounts' })
+
+      setStatus('Step 1/3: Creating escrow...')
+      const createData = encodeFunctionData({ abi: REACT_PAY_ABI, functionName: 'createEscrow', args: [freelancer as `0x${string}`, amt, title, BigInt(300)] })
+      const tx1 = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: REACT_PAY_ADDRESS, data: createData }] })
+      await publicClient.waitForTransactionReceipt({ hash: tx1 as `0x${string}`, timeout: 120_000 })
+
+      setStatus('Step 2/3: Sending RSTT to contract...')
+      const transferData = encodeFunctionData({ abi: MOCK_STT_ABI, functionName: 'transfer', args: [REACT_PAY_ADDRESS, amt] })
+      const tx2 = await eth.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: MOCK_STT_ADDRESS, data: transferData }] })
+      await publicClient.waitForTransactionReceipt({ hash: tx2 as `0x${string}`, timeout: 120_000 })
+
+      setStatus('Step 3/3: Waiting for Reactivity to confirm funding... ⚡')
+      await new Promise(resolve => setTimeout(resolve, 3000))
+
+      setStatus('Done! Reactivity is now watching for delivery...')
       setTimeout(() => { onDone(); onClose() }, 1500)
     } catch (e: any) { setErr(e?.shortMessage ?? e?.message ?? String(e)); setBusy(false) }
   }
