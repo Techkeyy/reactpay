@@ -1,3 +1,4 @@
 {
+  "buildCommand": "mkdir -p src/app src/components src/lib && cp page.tsx src/app/page.tsx 2>/dev/null; cp layout.tsx src/app/layout.tsx 2>/dev/null; cp globals.css src/app/globals.css 2>/dev/null; cp providers.tsx src/app/providers.tsx 2>/dev/null; cp App.tsx src/components/App.tsx 2>/dev/null; cp chain.ts src/lib/chain.ts 2>/dev/null; cp contracts.ts src/lib/contracts.ts 2>/dev/null; npm run build",
   "framework": "nextjs"
 }
